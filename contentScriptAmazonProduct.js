@@ -37,8 +37,8 @@ async function getTemplate() {
   return await makeRequest("GET", chrome.extension.getURL("templates/estimatedSales.html"));
 }
 
-function insertAfter(newNode, referenceNode) {
-  referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
+function insertBefore(newNode, referenceNode) {
+  referenceNode.parentNode.insertBefore(newNode, referenceNode);
 }
 
 function createElementFromHTML(htmlString) {
@@ -51,9 +51,11 @@ function createElementFromHTML(htmlString) {
 
 async function main() {
   console.log("executing");
-  const bsrElement = document.querySelector(
+  let bsrElement = document.querySelector(
     "#productDetails_detailBullets_sections1 > tbody > tr:nth-child(3) > td > span > span:nth-child(1)"
   );
+  if (!bsrElement) bsrElement = document.querySelector("#SalesRank");
+  console.log("bsrElement:", bsrElement);
   if (!bsrElement) return;
 
   const bsrText = bsrElement.innerText;
@@ -73,9 +75,12 @@ async function main() {
     // const sales = await fakeGetSales(category, bsr);
     console.log("sales:", sales);
     const template = await getTemplate();
-    const bylineInfoElement = document.querySelector("#bylineInfo_feature_div");
+    let injectReference = document.querySelector("#scenes_stage");
+    if (!injectReference) {
+      // find alternate reference element to inject sales element
+    }
     const injectElement = createElementFromHTML(template.replace("{ESTIMATED_SALES}", sales));
-    insertAfter(injectElement, bylineInfoElement);
+    insertBefore(injectElement, injectReference);
   }
 }
 
