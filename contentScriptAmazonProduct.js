@@ -49,37 +49,49 @@ function createElementFromHTML(htmlString) {
   return div.firstChild;
 }
 
+function getProductInfoElement() {
+  let bsrElement = document.querySelector("#productDetails_detailBullets_sections1");
+  if (!bsrElement) {
+    bsrElement = document.querySelector("#SalesRank");
+  }
+  return bsrElement;
+}
+
+function getInjectReferenceElement() {
+  let injectReference = document.querySelector("#desktop_unifiedPrice");
+  if (!injectReference) {
+    injectReference = document.querySelector("#scenes_stage");
+  }
+
+  return injectReference;
+}
+
 async function main() {
   console.log("executing");
-  let bsrElement = document.querySelector(
-    "#productDetails_detailBullets_sections1 > tbody > tr:nth-child(3) > td > span > span:nth-child(1)"
-  );
-  if (!bsrElement) bsrElement = document.querySelector("#SalesRank");
-  console.log("bsrElement:", bsrElement);
-  if (!bsrElement) return;
+  const productInfoElement = getProductInfoElement();
+  console.log("bsrElement:", productInfoElement);
+  if (!productInfoElement) return;
 
-  const bsrText = bsrElement.innerText;
+  const bsrText = productInfoElement.textContent.replace(/\s+/g, " ");
   // find category
-  const categoryFinder = /(?:\d\sin\s)(.+)(?:\s\()/;
+  const categoryFinder = /(?:Best Sellers Rank:? )(?:(?:\#)(?:\d{1,3})(?:,?\d{3})* in )(.+?)(?:\s\(|\s>)/;
   const categoryMatch = categoryFinder.exec(bsrText);
+  console.log("categoryMatch:", categoryMatch);
   const category = categoryMatch.length > 1 ? categoryMatch[1] : null;
   console.log("category:", category);
   // find bsr number
-  const bsrFinder = /(?:\#)((\d{1,3})(,\d{3})*)/;
+  const bsrFinder = /(?:Best Sellers Rank:? )(?:\#)((\d{1,3})(,?\d{3})*)/;
   const bsrMatch = bsrFinder.exec(bsrText);
   const bsr = bsrMatch.length > 1 ? bsrMatch[1].replace(/,/g, "") : null;
   console.log("bsr:", bsr);
 
   if (category && bsr) {
-    const sales = await getSalesEstimate(category, bsr);
     // const sales = await fakeGetSales(category, bsr);
+    const sales = await getSalesEstimate(category, bsr);
     console.log("sales:", sales);
     const template = await getTemplate();
-    let injectReference = document.querySelector("#scenes_stage");
-    if (!injectReference) {
-      // find alternate reference element to inject sales element
-    }
     const injectElement = createElementFromHTML(template.replace("{ESTIMATED_SALES}", sales));
+    const injectReference = getInjectReferenceElement();
     insertBefore(injectElement, injectReference);
   }
 }
